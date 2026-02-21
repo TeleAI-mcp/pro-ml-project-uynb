@@ -1,0 +1,36 @@
+name: Issue Label Commenter
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  comment-on-label:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'documentation' || github.event.label.name == 'enhancement' || github.event.label.name == 'bug'
+    steps:
+      - name: Comment on issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const label = context.payload.label.name;
+            const issueNumber = context.payload.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            
+            const comments = {
+              'documentation': 'Thank you for flagging this documentation issue. We will update it soon.',
+              'enhancement': 'Thanks for the enhancement suggestion! We appreciate your input.',
+              'bug': 'Thank you for reporting this bug. Our team will investigate and fix it.'
+            };
+            
+            const comment = comments[label];
+            if (comment) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: comment
+              });
+            }
